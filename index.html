@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>App de Reportes Inteligente</title>
+    <title>App de Reportes</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Biblioteca de Visión por Computadora OpenCV.js -->
-    <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -24,7 +22,6 @@
             margin: 0;
             background-color: var(--bg-color);
             color: var(--dark-color);
-            -webkit-tap-highlight-color: transparent;
         }
         .app-container {
             max-width: 600px;
@@ -93,16 +90,56 @@
         .modal-actions { display: flex; flex-direction: column; gap: 15px; margin: 25px 0; }
         .modal-separator { text-align: center; font-size: 0.9em; color: #888; margin: 20px 0 10px; }
 
-        .history-group details { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; background-color: #fff; }
-        .history-group summary { font-weight: bold; font-size: 1.1em; padding: 15px; cursor: pointer; list-style: none; display: flex; align-items: center; }
+        /* --- NEW & UPDATED HISTORY STYLES --- */
+        .history-group details {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+        .history-group summary {
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 15px;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
         .history-group summary::-webkit-details-marker { display: none; }
-        .history-group summary:before { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; margin-right: 12px; transition: transform 0.2s; font-size: 0.9em; }
+        .history-group summary:before {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-right: 12px;
+            transition: transform 0.2s;
+            font-size: 0.9em;
+        }
         .history-group details[open] > summary:before { transform: rotate(180deg); }
-        .history-group-nested { padding: 0 15px 10px 15px; }
-        .history-group-nested details { border-color: #e9ecef; background-color: #f8f9fa; }
-        .history-group-nested summary { font-size: 1em; padding: 12px 15px; }
-        .history-group-nested .history-group-nested { padding-left: 0; padding-right: 0; padding-bottom: 5px; }
-        .history-group-nested .history-group-nested summary { font-size: 0.9em; background-color: #fdfdff; font-weight: normal; padding: 10px 15px; }
+
+        .history-group-nested {
+            padding: 0 15px 10px 15px;
+        }
+        .history-group-nested details {
+             border-color: #e9ecef;
+             background-color: #f8f9fa;
+        }
+        .history-group-nested summary {
+            font-size: 1em;
+            padding: 12px 15px;
+        }
+        .history-group-nested .history-group-nested { /* Day level */
+            padding-left: 0;
+            padding-right: 0;
+            padding-bottom: 5px;
+        }
+         .history-group-nested .history-group-nested summary {
+             font-size: 0.9em;
+             background-color: #fdfdff;
+             font-weight: normal;
+             padding: 10px 15px;
+         }
+
         .history-item-container { padding: 0 15px 15px; }
         .history-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border-bottom: 1px solid #eee; padding: 12px 5px; }
         .history-item:last-child { border-bottom: none; }
@@ -114,17 +151,7 @@
         .history-actions .btn { padding: 8px 12px; font-size: 0.9em; border-radius: 6px; width: auto; }
         .history-share-btn { background-color: var(--primary-color); color: white; }
         .history-dl-btn { background-color: #6c757d; color: white; }
-        
-        #cameraModal .modal-container, #imageEditorModal .modal-container { width: 95%; max-width: 500px; padding: 15px; }
-        #cameraViewContainer { position: relative; width: 100%; background-color: #000; border-radius: 8px; overflow: hidden; }
-        #cameraVideo { width: 100%; display: block; }
-        #cameraOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        #cameraMessage { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.5); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8em; }
-        #imageEditorCanvas { width: 100%; border: 1px solid #ddd; border-radius: 8px; max-height: 50vh; object-fit: contain; }
-        .filter-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .filter-buttons .btn { font-size: 0.9em; padding: 12px; background-color: #6c757d; }
-        .filter-buttons .btn.active { background-color: var(--primary-color); box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary-color); }
-        
+
         .loader { display: inline-block; border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; width: 20px; height: 20px; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -202,41 +229,6 @@
             <button class="btn" style="background-color: #dc3545; color: white;" id="modalClose">Cerrar</button>
         </div>
     </div>
-    
-    <!-- MODAL PARA LA CÁMARA INTELIGENTE -->
-    <div class="modal-overlay" id="cameraModal">
-        <div class="modal-container">
-            <h3 class="modal-title">Captura Inteligente</h3>
-            <div id="cameraViewContainer">
-                <video id="cameraVideo" playsinline autoplay muted></video>
-                <canvas id="cameraOverlay"></canvas>
-                <div id="cameraMessage">Cargando cámara...</div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="cameraCaptureBtn"><i class="fa-solid fa-camera-retro"></i> Capturar Manualmente</button>
-                <button class="btn btn-danger" id="cameraCloseBtn">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL PARA EDICIÓN DE IMAGEN -->
-    <div class="modal-overlay" id="imageEditorModal">
-        <div class="modal-container">
-            <h3 class="modal-title">Revisar y Mejorar Foto</h3>
-            <canvas id="imageEditorCanvas"></canvas>
-            <div class="modal-actions">
-                <p style="text-align:center; margin-top:0; font-weight: 600;">Aplicar filtro:</p>
-                <div class="filter-buttons">
-                    <button class="btn" id="filterOriginal">Original</button>
-                    <button class="btn" id="filterEnhance"><i class="fa-solid fa-wand-magic-sparkles"></i> Mejorado</button>
-                    <button class="btn" id="filterScanner"><i class="fa-solid fa-file-invoice"></i> Escáner</button>
-                    <button class="btn" id="filterSharpen"><i class="fa-solid fa-text-height"></i> Realzar Texto</button>
-                </div>
-                <button class="btn btn-secondary" id="editorSaveBtn"><i class="fa-solid fa-check"></i> Guardar y Añadir a la Cola</button>
-                <button class="btn btn-danger" id="editorCancelBtn">Descartar</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // --- CONFIG & STATE ---
@@ -251,10 +243,6 @@
         let generatedPdfName = '';
         let currentDocumentType = null;
         let nativeShareSupported = false;
-        let cvReady = false;
-        let originalImageForEditing = null;
-        let stream;
-        let processVideoInterval;
 
         // --- DOM ELEMENTS ---
         const typeSelectionCard = document.getElementById('typeSelectionCard');
@@ -285,32 +273,6 @@
         const modalWhatsapp = document.getElementById('modalWhatsapp');
         const modalEmail = document.getElementById('modalEmail');
         const modalClose = document.getElementById('modalClose');
-        
-        const cameraModal = document.getElementById('cameraModal');
-        const cameraVideo = document.getElementById('cameraVideo');
-        const cameraOverlay = document.getElementById('cameraOverlay');
-        const cameraMessage = document.getElementById('cameraMessage');
-        const cameraCaptureBtn = document.getElementById('cameraCaptureBtn');
-        const cameraCloseBtn = document.getElementById('cameraCloseBtn');
-        
-        const imageEditorModal = document.getElementById('imageEditorModal');
-        const imageEditorCanvas = document.getElementById('imageEditorCanvas');
-        const editorSaveBtn = document.getElementById('editorSaveBtn');
-        const editorCancelBtn = document.getElementById('editorCancelBtn');
-        const filterButtonsContainer = document.querySelector('.filter-buttons');
-
-        // --- OPENCV INITIALIZATION ---
-        const onOpenCvReady = () => {
-            if (typeof cv !== 'undefined') {
-                cv['onRuntimeInitialized'] = () => {
-                    console.log("OpenCV.js está listo.");
-                    cvReady = true;
-                    cameraMessage.textContent = 'Apunte al documento...';
-                };
-            } else {
-                console.warn("OpenCV.js no se cargó a tiempo. Los filtros de imagen no estarán disponibles.");
-            }
-        };
 
         // --- DB LOGIC ---
         function initDB() {
@@ -326,8 +288,12 @@
                     } else {
                         store = event.target.transaction.objectStore(STORE_NAME);
                     }
-                    if (!store.indexNames.contains('fecha')) store.createIndex('fecha', 'fecha', { unique: false });
-                    if (!store.indexNames.contains('tipo')) store.createIndex('tipo', 'tipo', { unique: false });
+                    if (!store.indexNames.contains('fecha')) {
+                        store.createIndex('fecha', 'fecha', { unique: false });
+                    }
+                    if (!store.indexNames.contains('tipo')) {
+                        store.createIndex('tipo', 'tipo', { unique: false });
+                    }
                 };
             });
         }
@@ -364,9 +330,11 @@
         }
 
         function updateCharlaName() {
-            const start = charlaStartDate.value, end = charlaEndDate.value;
+            const start = charlaStartDate.value;
+            const end = charlaEndDate.value;
             if (start && end) {
-                const startDate = new Date(start + 'T00:00:00'), endDate = new Date(end + 'T00:00:00');
+                const startDate = new Date(start + 'T00:00:00');
+                const endDate = new Date(end + 'T00:00:00');
                 const startStr = startDate.toLocaleDateString('es-CO', { day: '2-digit', month: 'long' });
                 const endStr = endDate.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric'});
                 pdfNameInput.value = `CHARLA SEMANAL del ${startStr} al ${endStr}`;
@@ -376,187 +344,20 @@
         }
 
         function updateFormacionesName() {
-            const num = formacionNumero.value || 'XXX', txt = formacionTexto.value || 'descripción';
+            const num = formacionNumero.value || 'XXX';
+            const txt = formacionTexto.value || 'descripción';
             pdfNameInput.value = `PAM${num}-${txt}`;
         }
-        
-        // --- SMART CAMERA LOGIC ---
-        function openCamera() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert("Tu navegador no soporta el acceso a la cámara.");
-                return;
-            }
-            cameraModal.classList.add('is-active');
-            cameraMessage.textContent = 'Iniciando cámara...';
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-                .then(videoStream => {
-                    stream = videoStream;
-                    cameraVideo.srcObject = videoStream;
-                    cameraVideo.onloadedmetadata = () => {
-                        cameraOverlay.width = cameraVideo.videoWidth;
-                        cameraOverlay.height = cameraVideo.videoHeight;
-                        if(cvReady) processVideoInterval = setInterval(processVideoFrame, 100);
-                        else cameraMessage.textContent = "OpenCV no está listo. Detección desactivada.";
-                    };
-                })
-                .catch(err => {
-                    console.error("Error al acceder a la cámara:", err);
-                    alert("No se pudo acceder a la cámara. Revisa los permisos.");
-                    closeCamera();
-                });
-        }
 
-        function closeCamera() {
-            if (stream) stream.getTracks().forEach(track => track.stop());
-            if (processVideoInterval) clearInterval(processVideoInterval);
-            cameraModal.classList.remove('is-active');
-        }
-
-        function processVideoFrame() {
-            const overlayCtx = cameraOverlay.getContext('2d');
-            overlayCtx.clearRect(0, 0, cameraOverlay.width, cameraOverlay.height);
-            try {
-                const src = new cv.Mat(cameraVideo.videoHeight, cameraVideo.videoWidth, cv.CV_8UC4);
-                const cap = new cv.VideoCapture(cameraVideo);
-                cap.read(src);
-
-                const dst = new cv.Mat();
-                cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-                cv.GaussianBlur(dst, dst, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
-                cv.Canny(dst, dst, 50, 100);
-                
-                const contours = new cv.MatVector();
-                const hierarchy = new cv.Mat();
-                cv.findContours(dst, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-                let maxArea = 0, bestContour = null;
-                for (let i = 0; i < contours.size(); ++i) {
-                    const cnt = contours.get(i), area = cv.contourArea(cnt, false);
-                    if (area > maxArea) { maxArea = area; bestContour = cnt; }
-                }
-
-                if (bestContour && maxArea > (cameraOverlay.width * cameraOverlay.height * 0.1)) {
-                     overlayCtx.strokeStyle = "rgba(0, 255, 0, 0.7)";
-                     overlayCtx.lineWidth = 4;
-                     overlayCtx.beginPath();
-                     const points = bestContour.data32S;
-                     overlayCtx.moveTo(points[0], points[1]);
-                     for (let i = 2; i < points.length; i += 2) overlayCtx.lineTo(points[i], points[i + 1]);
-                     overlayCtx.closePath();
-                     overlayCtx.stroke();
-                     cameraMessage.textContent = "¡Documento detectado!";
-                } else {
-                    cameraMessage.textContent = "Apunte al documento...";
-                }
-                src.delete(); dst.delete(); contours.delete(); hierarchy.delete();
-            } catch (err) {
-                 if (processVideoInterval) clearInterval(processVideoInterval);
-                 console.error("Error en OpenCV:", err);
-                 cameraMessage.textContent = "Error de OpenCV. Detección detenida.";
-            }
-        }
-
-        function captureImageFromVideo() {
-            closeCamera();
-            const canvas = document.createElement('canvas');
-            canvas.width = cameraVideo.videoWidth;
-            canvas.height = cameraVideo.videoHeight;
-            canvas.getContext('2d').drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
-            openImageEditor(canvas.toDataURL('image/jpeg', 0.9));
-        }
-
-        // --- IMAGE EDITOR LOGIC ---
-        function openImageEditor(imageDataUrl) {
-            imageEditorModal.classList.add('is-active');
-            originalImageForEditing = new Image();
-            originalImageForEditing.onload = () => {
-                imageEditorCanvas.width = originalImageForEditing.width;
-                imageEditorCanvas.height = originalImageForEditing.height;
-                applyFilter('original');
-            };
-            originalImageForEditing.src = imageDataUrl;
-        }
-        
-        function applyFilter(filterType) {
-            document.querySelectorAll('.filter-buttons .btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`filter${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`).classList.add('active');
-
-            const ctx = imageEditorCanvas.getContext('2d');
-            ctx.drawImage(originalImageForEditing, 0, 0);
-
-            if (filterType === 'original' || !cvReady) return;
-
-            try {
-                let src = cv.imread(imageEditorCanvas);
-                let dst = new cv.Mat();
-                switch (filterType) {
-                    case 'enhance':
-                        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-                        let clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
-                        clahe.apply(dst, dst);
-                        cv.cvtColor(dst, src, cv.COLOR_GRAY2RGBA, 0);
-                        clahe.delete();
-                        break;
-                    case 'scanner':
-                        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-                        cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 4);
-                        cv.cvtColor(dst, src, cv.COLOR_GRAY2RGBA, 0);
-                        break;
-                    case 'sharpen':
-                        let kernel = cv.matFromArray(3, 3, cv.CV_32F, [0, -1, 0, -1, 5, -1, 0, -1, 0]);
-                        cv.filter2D(src, dst, cv.CV_8U, kernel, new cv.Point(-1, -1), 0, cv.BORDER_DEFAULT);
-                        dst.copyTo(src);
-                        kernel.delete();
-                        break;
-                }
-                cv.imshow(imageEditorCanvas, src);
-                src.delete(); dst.delete();
-            } catch (err) {
-                console.error("Error al aplicar filtro con OpenCV: ", err);
-                alert("No se pudo aplicar el filtro. Es posible que OpenCV no haya cargado correctamente.");
-            }
-        }
-
-        function saveEditedImage() {
-            const finalImageDataUrl = imageEditorCanvas.toDataURL('image/jpeg', 0.9);
-            const file = dataURLtoFile(finalImageDataUrl, `img_${Date.now()}.jpg`);
-            selectedFiles.push(file);
-            updateSelectedFilesUI();
-            closeEditor();
-        }
-
-        function closeEditor() {
-            imageEditorModal.classList.remove('is-active');
-            originalImageForEditing = null;
-        }
-
-        // --- FILE HANDLING & PDF GENERATION ---
+        // --- FILE HANDLING ---
         function handleFileSelection(event) {
             const newFiles = Array.from(event.target.files);
             if (selectedFiles.length + newFiles.length > 10) {
                 alert("Puedes seleccionar un máximo de 10 archivos en total.");
                 return;
             }
-            
-            const processQueue = [...newFiles];
-            function processNextFile() {
-                if (processQueue.length === 0) {
-                    // Restaurar listeners por defecto cuando la cola termina
-                    editorSaveBtn.onclick = saveEditedImage;
-                    editorCancelBtn.onclick = closeEditor;
-                    return;
-                }
-                const file = processQueue.shift();
-                const reader = new FileReader();
-                reader.onload = (e) => openImageEditor(e.target.result);
-                reader.readAsDataURL(file);
-            }
-
-            // Sobreescribir temporalmente los listeners para manejar la cola
-            editorSaveBtn.onclick = () => { saveEditedImage(); processNextFile(); };
-            editorCancelBtn.onclick = () => { closeEditor(); processNextFile(); };
-
-            processNextFile();
+            selectedFiles.push(...newFiles);
+            updateSelectedFilesUI();
         }
 
         function updateSelectedFilesUI() {
@@ -565,11 +366,12 @@
                 generateButton.disabled = true;
             } else {
                 selectionInfo.style.display = 'block';
-                selectedFilesList.innerHTML = selectedFiles.map(f => `<li>${f.name} (Procesada)</li>`).join('');
+                selectedFilesList.innerHTML = selectedFiles.map(f => `<li>${f.name}</li>`).join('');
                 generateButton.disabled = false;
             }
         }
-        
+
+        // --- PDF GENERATION ---
         generateButton.addEventListener('click', async () => {
             if (!pdfNameInput.value.trim() || pdfNameInput.value.includes('(selecciona') || pdfNameInput.value.includes('XXX')) {
                 alert("Por favor, completa los datos para el nombre del reporte.");
@@ -606,186 +408,232 @@
                 generateButton.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generar PDF';
             }
         });
-
-        // --- SHARING, HISTORY & HELPER FUNCTIONS ---
-        // (Esta sección no necesita cambios y se mantiene como en la versión original)
+        
+        // --- SHARING LOGIC (HÍBRIDA) ---
         function showShareOptionsModal() {
             modalNativeShare.style.display = nativeShareSupported ? 'flex' : 'none';
             modalSeparator.style.display = nativeShareSupported ? 'block' : 'none';
             modalEmail.style.display = (currentDocumentType === 'RECONEXION') ? 'flex' : 'none';
             shareModal.classList.add('is-active'); 
         }
+
         async function triggerNativeShare(blob, name) {
             const pdfFile = new File([blob], `${name}.pdf`, { type: 'application/pdf' });
-            if (!navigator.canShare || !navigator.canShare({ files: [pdfFile] })) {
-                alert("Tu navegador no puede compartir este tipo de archivo.");
-                return;
+            const shareData = {
+                files: [pdfFile],
+                title: name,
+                text: `Se adjunta el documento: ${name}`
+            };
+            try {
+                await navigator.share(shareData);
+            } catch (error) {
+                if (error.name !== 'AbortError') console.error('Error al compartir:', error);
             }
-            try { await navigator.share({ files: [pdfFile], title: name, text: `Se adjunta: ${name}` }); }
-            catch (error) { if (error.name !== 'AbortError') console.error('Error al compartir:', error); }
         }
+
+        // --- LISTENERS DEL MODAL ---
+        modalNativeShare.addEventListener('click', () => {
+            triggerNativeShare(generatedPdfBlob, generatedPdfName).finally(closeModal);
+        });
+        modalClose.addEventListener('click', closeModal);
+        modalDownload.addEventListener('click', () => {
+            downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`);
+            closeModal();
+        });
+        modalWhatsapp.addEventListener('click', () => {
+            const mensaje = encodeURIComponent(`Se comparte el documento: ${generatedPdfName}`);
+            window.open(`https://api.whatsapp.com/send?text=${mensaje}`, '_blank');
+            setTimeout(() => downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`), 500);
+            closeModal();
+        });
+        modalEmail.addEventListener('click', () => {
+            const cc = "diego.medina@inmel.co,edgar.mendoza@inmel.co,NELSON.CARVAJAL@cens.com.co";
+            const asunto = encodeURIComponent("RECONEXIONES A PAPEL");
+            const firmaTexto = `\n\n\nCordialmente.\n\nSupervisión Pamplona\nProyecto CENS Comercial\nsupervisionpamplona.cens@consorcioci.co\nDirección: Carera 8 # 4-80\nPBX: (57 7) 595 5345\nPamplona - Norte de Santander`;
+            const cuerpo = encodeURIComponent(`Buen día.\n\nAdjunto archivo correspondiente a reconexiones en papel ejecutadas, para que por favor me colabore con el ingreso en el sistema.\n\nQuedo atento.${firmaTexto}`);
+            window.open(`mailto:${CORREO_DESTINO}?cc=${cc}&subject=${asunto}&body=${cuerpo}`, '_blank');
+            setTimeout(() => downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`), 500);
+            closeModal();
+        });
         function closeModal() { shareModal.classList.remove('is-active'); }
+
+        // --- HISTORY LOGIC ---
         async function agregarAlHistorial(nombre, pdfBlob, tipo) {
             const transaction = db.transaction([STORE_NAME], 'readwrite');
             const store = transaction.objectStore(STORE_NAME);
             return new Promise((resolve, reject) => {
                 const request = store.add({ nombre, fecha: new Date(), pdfBlob, tipo });
-                request.onsuccess = resolve; request.onerror = reject;
+                request.onsuccess = resolve;
+                request.onerror = reject;
             });
         }
+
         async function mostrarHistorial() {
             await limpiarHistorialAntiguo();
             const transaction = db.transaction([STORE_NAME], 'readonly');
             const store = transaction.objectStore(STORE_NAME);
             const request = store.getAll();
+
             request.onerror = () => { historyContainer.innerHTML = "<p>Error al cargar el historial.</p>"; };
+            
             request.onsuccess = (event) => {
                 const historial = event.target.result;
-                if (historial.length === 0) { historyContainer.innerHTML = "<p>No hay envíos guardados.</p>"; return; }
+                if (historial.length === 0) {
+                    historyContainer.innerHTML = "<p>No hay envíos guardados.</p>";
+                    return;
+                }
+
+                // Agrupación jerárquica: Tipo -> Mes -> Día
                 const grouped = historial.reduce((acc, item) => {
-                    const tipo = item.tipo || 'Sin Categoría', fecha = new Date(item.fecha);
+                    const tipo = item.tipo || 'Sin Categoría';
+                    const fecha = new Date(item.fecha);
                     const monthKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
                     const dayKey = `${monthKey}-${String(fecha.getDate()).padStart(2, '0')}`;
+
                     if (!acc[tipo]) acc[tipo] = {};
                     if (!acc[tipo][monthKey]) acc[tipo][monthKey] = {};
                     if (!acc[tipo][monthKey][dayKey]) acc[tipo][monthKey][dayKey] = [];
                     acc[tipo][monthKey][dayKey].push(item);
                     return acc;
                 }, {});
+
                 let html = '<div class="history-group">';
+                
+                // Nivel 1: Tipo de Documento
                 for (const tipo in grouped) {
                     const tipoNombres = { 'RECONEXION': 'Reconexiones', 'CHARLA SEMANAL': 'Charlas Semanales', 'FORMACIONES': 'Formaciones' };
                     const tipoNombre = tipoNombres[tipo] || tipo;
                     const totalItemsPorTipo = Object.values(grouped[tipo]).flatMap(days => Object.values(days)).flat().length;
+
                     html += `<details><summary>${tipoNombre} (${totalItemsPorTipo})</summary><div class="history-group-nested">`;
-                    const meses = grouped[tipo], sortedMonthKeys = Object.keys(meses).sort().reverse();
+                    
+                    // Nivel 2: Mes
+                    const meses = grouped[tipo];
+                    const sortedMonthKeys = Object.keys(meses).sort().reverse();
                     for(const monthKey of sortedMonthKeys) {
                         const totalItemsPorMes = Object.values(meses[monthKey]).flat().length;
-                        const [year, month] = monthKey.split('-'), monthName = new Date(year, month - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                        const [year, month] = monthKey.split('-');
+                        const monthName = new Date(year, month - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+                        
                         html += `<details><summary class="month-summary">${monthName.charAt(0).toUpperCase() + monthName.slice(1)} (${totalItemsPorMes})</summary><div class="history-group-nested">`;
-                        const dias = meses[monthKey], sortedDayKeys = Object.keys(dias).sort().reverse();
+
+                        // Nivel 3: Día
+                        const dias = meses[monthKey];
+                        const sortedDayKeys = Object.keys(dias).sort().reverse();
                         for(const dayKey of sortedDayKeys) {
                             const itemsDelDia = dias[dayKey];
-                            const [dYear, dMonth, dDay] = dayKey.split('-'), dayName = new Date(dYear, dMonth-1, dDay).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
+                            const [dYear, dMonth, dDay] = dayKey.split('-');
+                            const dayName = new Date(dYear, dMonth-1, dDay).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
+
                             html += `<details><summary class="day-summary">${dayName.charAt(0).toUpperCase() + dayName.slice(1)} (${itemsDelDia.length})</summary><div class="history-item-container">`;
+                            
+                            // Renderizar items
                             html += itemsDelDia.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).map(item => `
                                 <div class="history-item">
-                                    <div class="history-info"><span class="name">${item.nombre}</span><span class="date">${new Date(item.fecha).toLocaleString('es-ES')}</span></div>
+                                    <div class="history-info">
+                                        <span class="name">${item.nombre}</span>
+                                        <span class="date">${new Date(item.fecha).toLocaleString('es-ES')}</span>
+                                    </div>
                                     <div class="history-actions">
                                         ${nativeShareSupported ? `<button class="btn history-share-btn" data-id="${item.id}"><i class="fa-solid fa-share-nodes"></i></button>` : ''}
                                         <button class="btn history-dl-btn" data-id="${item.id}"><i class="fa-solid fa-download"></i></button>
                                     </div>
                                 </div>`).join('');
-                            html += `</div></details>`;
+                            
+                            html += `</div></details>`; // Cierre día
                         }
-                        html += `</div></details>`;
+                        html += `</div></details>`; // Cierre mes
                     }
-                    html += `</div></details>`;
+                    html += `</div></details>`; // Cierre tipo
                 }
-                historyContainer.innerHTML = html + '</div>';
+                html += '</div>';
+                historyContainer.innerHTML = html;
             };
         }
+
+        historyContainer.addEventListener('click', (event) => {
+            const dlBtn = event.target.closest('.history-dl-btn');
+            if (dlBtn) { const id = Number(dlBtn.dataset.id); descargarDesdeHistorial(id); }
+
+            const shareBtn = event.target.closest('.history-share-btn');
+            if (shareBtn) { const id = Number(shareBtn.dataset.id); shareFromHistory(id); }
+        });
         function descargarDesdeHistorial(id) {
-            const store = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME);
-            store.get(id).onsuccess = (event) => {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(id);
+            request.onsuccess = (event) => {
                 const record = event.target.result;
-                if (record && record.pdfBlob) downloadBlob(record.pdfBlob, `${record.nombre}.pdf`);
+                if (record && record.pdfBlob) { downloadBlob(record.pdfBlob, `${record.nombre}.pdf`); }
             };
         }
         async function shareFromHistory(id) {
-            const store = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME);
-            store.get(id).onsuccess = (event) => {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(id);
+            request.onsuccess = (event) => {
                 const record = event.target.result;
-                if (record && record.pdfBlob) triggerNativeShare(record.pdfBlob, record.nombre);
+                if (record && record.pdfBlob) { triggerNativeShare(record.pdfBlob, record.nombre); }
             };
         }
         function downloadBlob(blob, filename) {
              const url = URL.createObjectURL(blob);
              const a = document.createElement('a');
-             a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+             a.href = url;
+             a.download = filename;
+             document.body.appendChild(a);
+             a.click();
+             a.remove();
+             URL.revokeObjectURL(url);
         }
         function limpiarHistorialAntiguo() {
             return new Promise((resolve, reject) => {
                 const tresMesesAtras = new Date();
                 tresMesesAtras.setMonth(tresMesesAtras.getMonth() - 3);
-                const index = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).index('fecha');
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const index = store.index('fecha');
                 const request = index.openCursor(IDBKeyRange.upperBound(tresMesesAtras));
                 request.onsuccess = event => { const cursor = event.target.result; if (cursor) { cursor.delete(); cursor.continue(); } else { resolve(); } };
                 request.onerror = reject;
             });
         }
+
+        // --- HELPER FUNCTIONS ---
         const readFileAsDataURL = file => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
         const getImageProperties = src => new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve({ width: img.width, height: img.height }); img.onerror = reject; img.src = src; });
-        function dataURLtoFile(dataurl, filename) {
-            let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-            while(n--) u8arr[n] = bstr.charCodeAt(n);
-            return new File([u8arr], filename, {type:mime});
-        }
 
-        // --- GLOBAL EVENT LISTENERS & INITIALIZATION ---
+        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', async () => {
             nativeShareSupported = !!(navigator.share && navigator.canShare);
-            onOpenCvReady(); // Llama a la inicialización de OpenCV
             try {
                 await initDB();
                 await mostrarHistorial();
             } catch (error) {
                 console.error(error);
-                historyContainer.innerHTML = `<p style="color:red;">Error fatal al cargar la base de datos.</p>`;
+                historyContainer.innerHTML = `<p style="color:red;">Error al cargar el historial.</p>`;
             }
             showTypeSelection();
             updateSelectedFilesUI();
         });
-        
+
+        // --- EVENT LISTENERS UI ---
         typeButtons.forEach(btn => btn.addEventListener('click', () => showMainContent(btn.dataset.type))); 
         changeTypeBtn.addEventListener('click', showTypeSelection); 
         charlaStartDate.addEventListener('change', updateCharlaName); 
         charlaEndDate.addEventListener('change', updateCharlaName); 
         formacionNumero.addEventListener('input', updateFormacionesName); 
         formacionTexto.addEventListener('input', updateFormacionesName);
-        captureBtn.addEventListener('click', openCamera);
+        captureBtn.addEventListener('click', () => captureInput.click()); 
         selectBtn.addEventListener('click', () => selectInput.click()); 
         captureInput.addEventListener('change', handleFileSelection); 
         selectInput.addEventListener('change', handleFileSelection);
         clearSelectionBtn.addEventListener('click', () => { 
             selectedFiles = []; 
-            captureInput.value = ''; selectInput.value = ''; 
+            captureInput.value = ''; 
+            selectInput.value = ''; 
             updateSelectedFilesUI(); 
         });
-
-        // Camera & Editor listeners
-        cameraCloseBtn.addEventListener('click', closeCamera);
-        cameraCaptureBtn.addEventListener('click', captureImageFromVideo);
-        editorSaveBtn.addEventListener('click', saveEditedImage); // Default behavior
-        editorCancelBtn.addEventListener('click', closeEditor); // Default behavior
-        filterButtonsContainer.addEventListener('click', (e) => {
-            const button = e.target.closest('.btn');
-            if (button && button.id) applyFilter(button.id.replace('filter', '').toLowerCase());
-        });
-        
-        // Share Modal listeners
-        modalNativeShare.addEventListener('click', () => triggerNativeShare(generatedPdfBlob, generatedPdfName).finally(closeModal));
-        modalClose.addEventListener('click', closeModal);
-        modalDownload.addEventListener('click', () => { downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`); closeModal(); });
-        modalWhatsapp.addEventListener('click', () => {
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Se comparte: ${generatedPdfName}`)}`, '_blank');
-            setTimeout(() => downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`), 500); closeModal();
-        });
-        modalEmail.addEventListener('click', () => {
-            const cc = "diego.medina@inmel.co,edgar.mendoza@inmel.co,NELSON.CARVAJAL@cens.com.co";
-            const asunto = encodeURIComponent("RECONEXIONES A PAPEL"), firma = `\n\n\nCordialmente.\n\nSupervisión Pamplona\nProyecto CENS Comercial\nsupervisionpamplona.cens@consorcioci.co`, cuerpo = encodeURIComponent(`Buen día.\n\nAdjunto archivo de reconexiones ejecutadas.\n\nQuedo atento.${firma}`);
-            window.open(`mailto:${CORREO_DESTINO}?cc=${cc}&subject=${asunto}&body=${cuerpo}`, '_blank');
-            setTimeout(() => downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`), 500); closeModal();
-        });
-        
-        // History listeners
-        historyContainer.addEventListener('click', (event) => {
-            const dlBtn = event.target.closest('.history-dl-btn');
-            if (dlBtn) descargarDesdeHistorial(Number(dlBtn.dataset.id));
-            const shareBtn = event.target.closest('.history-share-btn');
-            if (shareBtn) shareFromHistory(Number(shareBtn.dataset.id));
-        });
-
     </script>
 </body>
 </html>
