@@ -1,10 +1,11 @@
 {
-  "name": "Aplicación de Navegación Regional Pamplona",
-  "short_name": "NavApp",
-  "start_url": "./index.html",
+  "name": "Gestor de Reportes Pro",
+  "short_name": "ReportesPro",
+  "description": "Una aplicación para generar y gestionar reportes en PDF directamente desde el dispositivo.",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#00796b",
+  "background_color": "#f0f2f5",
+  "theme_color": "#0d6efd",
   "orientation": "portrait",
   "icons": [
     {
