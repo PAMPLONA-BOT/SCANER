@@ -6,7 +6,7 @@
     <title>App de Reportes Inteligente</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Biblioteca de Visión por Computadora OpenCV.js -->
-    <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+    <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady();"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -145,98 +145,30 @@
         <div id="mainContent" style="display: none;">
             <!-- CARD 1: INPUTS -->
             <div class="card" id="prepareCard">
-                <h2 class="card-title">1. Preparar Documentos 
-                    <button id="changeTypeBtn" style="font-size: 0.6em; padding: 5px 10px; border-radius: 5px; background: #6c757d; color: white; border: none; cursor: pointer;">Cambiar Tipo</button>
-                </h2>
-                <div id="charlaInputs" class="input-group" style="display:none;">
-                    <label>Rango de fechas para la charla:</label>
-                    <div class="input-group-grid"> <input type="date" id="charlaStartDate"> <input type="date" id="charlaEndDate"> </div>
-                </div>
-                <div id="formacionesInputs" class="input-group" style="display:none;">
-                     <label>Datos de la Formación:</label>
-                     <div class="input-group-grid"> <input type="number" id="formacionNumero" placeholder="3 Números"> <input type="text" id="formacionTexto" placeholder="Texto adicional"> </div>
-                </div>
-                <div class="input-group">
-                    <label for="pdfNameInput">Nombre del Reporte:</label>
-                    <input type="text" id="pdfNameInput" placeholder="Se generará automáticamente...">
-                </div>
-                <div class="button-group">
-                    <button class="btn btn-primary" id="captureBtn"><i class="fa-solid fa-camera"></i> Tomar Foto</button>
-                    <button class="btn btn-primary" id="selectBtn"><i class="fa-solid fa-images"></i> Seleccionar</button>
-                    <input type="file" id="captureInput" multiple accept="image/*" capture="environment" style="display:none;">
-                    <input type="file" id="selectInput" multiple accept="image/*" style="display:none;">
-                </div>
-                <div id="selectionInfo" style="display:none;">
-                    <h4>Archivos en cola:</h4> <ul id="selectedFilesList"></ul>
-                    <button class="btn btn-danger btn-full" id="clearSelectionBtn"><i class="fa-solid fa-trash"></i> Limpiar Selección</button>
-                </div>
+                <h2 class="card-title">1. Preparar Documentos <button id="changeTypeBtn" style="font-size: 0.6em; padding: 5px 10px; border-radius: 5px; background: #6c757d; color: white; border: none; cursor: pointer;">Cambiar Tipo</button></h2>
+                <div id="charlaInputs" class="input-group" style="display:none;"><label>Rango de fechas para la charla:</label><div class="input-group-grid"> <input type="date" id="charlaStartDate"> <input type="date" id="charlaEndDate"> </div></div>
+                <div id="formacionesInputs" class="input-group" style="display:none;"><label>Datos de la Formación:</label><div class="input-group-grid"> <input type="number" id="formacionNumero" placeholder="3 Números"> <input type="text" id="formacionTexto" placeholder="Texto adicional"> </div></div>
+                <div class="input-group"><label for="pdfNameInput">Nombre del Reporte:</label><input type="text" id="pdfNameInput" placeholder="Se generará automáticamente..."></div>
+                <div class="button-group"><button class="btn btn-primary" id="captureBtn"><i class="fa-solid fa-camera"></i> Tomar Foto</button><button class="btn btn-primary" id="selectBtn"><i class="fa-solid fa-images"></i> Seleccionar</button><input type="file" id="captureInput" multiple accept="image/*" capture="environment" style="display:none;"><input type="file" id="selectInput" multiple accept="image/*" style="display:none;"></div>
+                <div id="selectionInfo" style="display:none;"><h4>Archivos en cola:</h4> <ul id="selectedFilesList"></ul><button class="btn btn-danger btn-full" id="clearSelectionBtn"><i class="fa-solid fa-trash"></i> Limpiar Selección</button></div>
             </div>
 
             <!-- CARD 2: ACTION -->
-            <div class="card" id="generateCard">
-                 <h2 class="card-title">2. Generar y Enviar</h2>
-                 <button class="btn btn-secondary btn-full" id="generateButton" disabled> <i class="fa-solid fa-file-pdf"></i> Generar PDF </button>
-                 <div id="status" style="text-align: center; margin-top: 15px; font-weight: 600;"></div>
-            </div>
+            <div class="card" id="generateCard"><h2 class="card-title">2. Generar y Enviar</h2><button class="btn btn-secondary btn-full" id="generateButton" disabled> <i class="fa-solid fa-file-pdf"></i> Generar PDF </button><div id="status" style="text-align: center; margin-top: 15px; font-weight: 600;"></div></div>
 
             <!-- CARD 3: HISTORY -->
-            <div class="card" id="historyCard">
-                <h2 class="card-title">Historial de Envíos</h2>
-                <div id="historyContainer"><p>Cargando...</p></div>
-            </div>
+            <div class="card" id="historyCard"><h2 class="card-title">Historial de Envíos</h2><div id="historyContainer"><p>Cargando...</p></div></div>
         </div>
     </div>
     
     <!-- MODAL DE COMPARTIR HÍBRIDO -->
-    <div class="modal-overlay" id="shareModal">
-        <div class="modal-container">
-            <h3 class="modal-title">¡PDF Generado!</h3>
-            <p style="text-align:center; color: #555;">Elige cómo quieres compartirlo:</p>
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="modalNativeShare"><i class="fa-solid fa-share-nodes"></i> Compartir...</button>
-                <div class="modal-separator" id="modalSeparator">o usa una acción específica:</div>
-                <button class="btn btn-secondary" id="modalWhatsapp"><i class="fa-brands fa-whatsapp"></i> Enviar a WhatsApp</button>
-                <button class="btn" style="background-color: #0072C6; color: white;" id="modalEmail"><i class="fa-solid fa-envelope"></i> Enviar Correo (Reconexión)</button>
-                <button class="btn" style="background-color: #6c757d; color: white;" id="modalDownload"><i class="fa-solid fa-download"></i> Solo Descargar</button>
-            </div>
-            <button class="btn" style="background-color: #dc3545; color: white;" id="modalClose">Cerrar</button>
-        </div>
-    </div>
+    <div class="modal-overlay" id="shareModal"><div class="modal-container"><h3 class="modal-title">¡PDF Generado!</h3><p style="text-align:center; color: #555;">Elige cómo quieres compartirlo:</p><div class="modal-actions"><button class="btn btn-primary" id="modalNativeShare"><i class="fa-solid fa-share-nodes"></i> Compartir...</button><div class="modal-separator" id="modalSeparator">o usa una acción específica:</div><button class="btn btn-secondary" id="modalWhatsapp"><i class="fa-brands fa-whatsapp"></i> Enviar a WhatsApp</button><button class="btn" style="background-color: #0072C6; color: white;" id="modalEmail"><i class="fa-solid fa-envelope"></i> Enviar Correo (Reconexión)</button><button class="btn" style="background-color: #6c757d; color: white;" id="modalDownload"><i class="fa-solid fa-download"></i> Solo Descargar</button></div><button class="btn" style="background-color: #dc3545; color: white;" id="modalClose">Cerrar</button></div></div>
     
     <!-- MODAL PARA LA CÁMARA INTELIGENTE -->
-    <div class="modal-overlay" id="cameraModal">
-        <div class="modal-container">
-            <h3 class="modal-title">Captura Inteligente</h3>
-            <div id="cameraViewContainer">
-                <video id="cameraVideo" playsinline autoplay muted></video>
-                <canvas id="cameraOverlay"></canvas>
-                <div id="cameraMessage">Cargando cámara...</div>
-            </div>
-            <div class="modal-actions">
-                <button class="btn btn-primary" id="cameraCaptureBtn"><i class="fa-solid fa-camera-retro"></i> Capturar Manualmente</button>
-                <button class="btn btn-danger" id="cameraCloseBtn">Cancelar</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay" id="cameraModal"><div class="modal-container"><h3 class="modal-title">Captura Inteligente</h3><div id="cameraViewContainer"><video id="cameraVideo" playsinline autoplay muted></video><canvas id="cameraOverlay"></canvas><div id="cameraMessage">Cargando cámara...</div></div><div class="modal-actions"><button class="btn btn-primary" id="cameraCaptureBtn"><i class="fa-solid fa-camera-retro"></i> Capturar Manualmente</button><button class="btn btn-danger" id="cameraCloseBtn">Cancelar</button></div></div></div>
 
     <!-- MODAL PARA EDICIÓN DE IMAGEN -->
-    <div class="modal-overlay" id="imageEditorModal">
-        <div class="modal-container">
-            <h3 class="modal-title">Revisar y Mejorar Foto</h3>
-            <canvas id="imageEditorCanvas"></canvas>
-            <div class="modal-actions">
-                <p style="text-align:center; margin-top:0; font-weight: 600;">Aplicar filtro:</p>
-                <div class="filter-buttons">
-                    <button class="btn" id="filterOriginal">Original</button>
-                    <button class="btn" id="filterEnhance"><i class="fa-solid fa-wand-magic-sparkles"></i> Mejorado</button>
-                    <button class="btn" id="filterScanner"><i class="fa-solid fa-file-invoice"></i> Escáner</button>
-                    <button class="btn" id="filterSharpen"><i class="fa-solid fa-text-height"></i> Realzar Texto</button>
-                </div>
-                <button class="btn btn-secondary" id="editorSaveBtn"><i class="fa-solid fa-check"></i> Guardar y Añadir a la Cola</button>
-                <button class="btn btn-danger" id="editorCancelBtn">Descartar</button>
-            </div>
-        </div>
-    </div>
+    <div class="modal-overlay" id="imageEditorModal"><div class="modal-container"><h3 class="modal-title">Revisar y Mejorar Foto</h3><canvas id="imageEditorCanvas"></canvas><div class="modal-actions"><p style="text-align:center; margin-top:0; font-weight: 600;">Aplicar filtro:</p><div class="filter-buttons"><button class="btn" id="filterOriginal">Original</button><button class="btn" id="filterEnhance"><i class="fa-solid fa-wand-magic-sparkles"></i> Mejorado</button><button class="btn" id="filterScanner"><i class="fa-solid fa-file-invoice"></i> Escáner</button><button class="btn" id="filterSharpen"><i class="fa-solid fa-text-height"></i> Realzar Texto</button></div><button class="btn btn-secondary" id="editorSaveBtn"><i class="fa-solid fa-check"></i> Guardar y Añadir a la Cola</button><button class="btn btn-danger" id="editorCancelBtn">Descartar</button></div></div></div>
 
     <script>
         // --- CONFIG & STATE ---
@@ -252,158 +184,69 @@
         let currentDocumentType = null;
         let nativeShareSupported = false;
         let cvReady = false;
+        let detectionFailed = false;
         let originalImageForEditing = null;
         let stream;
         let processVideoInterval;
 
         // --- DOM ELEMENTS ---
-        const typeSelectionCard = document.getElementById('typeSelectionCard');
-        const mainContent = document.getElementById('mainContent');
-        const typeButtons = document.querySelectorAll('.type-btn');
-        const changeTypeBtn = document.getElementById('changeTypeBtn');
-        const charlaInputs = document.getElementById('charlaInputs');
-        const charlaStartDate = document.getElementById('charlaStartDate');
-        const charlaEndDate = document.getElementById('charlaEndDate');
-        const formacionesInputs = document.getElementById('formacionesInputs');
-        const formacionNumero = document.getElementById('formacionNumero');
-        const formacionTexto = document.getElementById('formacionTexto');
-        const captureBtn = document.getElementById('captureBtn');
-        const selectBtn = document.getElementById('selectBtn');
-        const clearSelectionBtn = document.getElementById('clearSelectionBtn');
-        const captureInput = document.getElementById('captureInput');
-        const selectInput = document.getElementById('selectInput');
-        const selectionInfo = document.getElementById('selectionInfo');
-        const selectedFilesList = document.getElementById('selectedFilesList');
-        const pdfNameInput = document.getElementById('pdfNameInput');
-        const generateButton = document.getElementById('generateButton');
-        const statusDiv = document.getElementById('status');
-        const historyContainer = document.getElementById('historyContainer');
-        const shareModal = document.getElementById('shareModal');
-        const modalNativeShare = document.getElementById('modalNativeShare');
-        const modalSeparator = document.getElementById('modalSeparator');
-        const modalDownload = document.getElementById('modalDownload');
-        const modalWhatsapp = document.getElementById('modalWhatsapp');
-        const modalEmail = document.getElementById('modalEmail');
-        const modalClose = document.getElementById('modalClose');
-        
-        const cameraModal = document.getElementById('cameraModal');
-        const cameraVideo = document.getElementById('cameraVideo');
-        const cameraOverlay = document.getElementById('cameraOverlay');
-        const cameraMessage = document.getElementById('cameraMessage');
-        const cameraCaptureBtn = document.getElementById('cameraCaptureBtn');
-        const cameraCloseBtn = document.getElementById('cameraCloseBtn');
-        
-        const imageEditorModal = document.getElementById('imageEditorModal');
-        const imageEditorCanvas = document.getElementById('imageEditorCanvas');
-        const editorSaveBtn = document.getElementById('editorSaveBtn');
-        const editorCancelBtn = document.getElementById('editorCancelBtn');
-        const filterButtonsContainer = document.querySelector('.filter-buttons');
+        const typeSelectionCard = document.getElementById('typeSelectionCard'); const mainContent = document.getElementById('mainContent'); const typeButtons = document.querySelectorAll('.type-btn'); const changeTypeBtn = document.getElementById('changeTypeBtn'); const charlaInputs = document.getElementById('charlaInputs'); const charlaStartDate = document.getElementById('charlaStartDate'); const charlaEndDate = document.getElementById('charlaEndDate'); const formacionesInputs = document.getElementById('formacionesInputs'); const formacionNumero = document.getElementById('formacionNumero'); const formacionTexto = document.getElementById('formacionTexto'); const captureBtn = document.getElementById('captureBtn'); const selectBtn = document.getElementById('selectBtn'); const clearSelectionBtn = document.getElementById('clearSelectionBtn'); const captureInput = document.getElementById('captureInput'); const selectInput = document.getElementById('selectInput'); const selectionInfo = document.getElementById('selectionInfo'); const selectedFilesList = document.getElementById('selectedFilesList'); const pdfNameInput = document.getElementById('pdfNameInput'); const generateButton = document.getElementById('generateButton'); const statusDiv = document.getElementById('status'); const historyContainer = document.getElementById('historyContainer'); const shareModal = document.getElementById('shareModal'); const modalNativeShare = document.getElementById('modalNativeShare'); const modalSeparator = document.getElementById('modalSeparator'); const modalDownload = document.getElementById('modalDownload'); const modalWhatsapp = document.getElementById('modalWhatsapp'); const modalEmail = document.getElementById('modalEmail'); const modalClose = document.getElementById('modalClose'); const cameraModal = document.getElementById('cameraModal'); const cameraVideo = document.getElementById('cameraVideo'); const cameraOverlay = document.getElementById('cameraOverlay'); const cameraMessage = document.getElementById('cameraMessage'); const cameraCaptureBtn = document.getElementById('cameraCaptureBtn'); const cameraCloseBtn = document.getElementById('cameraCloseBtn'); const imageEditorModal = document.getElementById('imageEditorModal'); const imageEditorCanvas = document.getElementById('imageEditorCanvas'); const editorSaveBtn = document.getElementById('editorSaveBtn'); const editorCancelBtn = document.getElementById('editorCancelBtn'); const filterButtonsContainer = document.querySelector('.filter-buttons');
 
-        // --- OPENCV INITIALIZATION ---
-        const onOpenCvReady = () => {
-            if (typeof cv !== 'undefined') {
-                cv['onRuntimeInitialized'] = () => {
+        // --- OPENCV INITIALIZATION (ROBUST) ---
+        function onOpenCvReady() {
+            if (typeof cv !== 'undefined' && cv.onRuntimeInitialized) {
+                 cv.onRuntimeInitialized = () => {
                     console.log("OpenCV.js está listo.");
                     cvReady = true;
-                    cameraMessage.textContent = 'Apunte al documento...';
                 };
             } else {
-                console.warn("OpenCV.js no se cargó a tiempo. Los filtros de imagen no estarán disponibles.");
+                // Fallback for browsers that might execute the script before setting the onload callback
+                setTimeout(() => {
+                    if (typeof cv !== 'undefined') {
+                        console.log("OpenCV.js está listo (fallback).");
+                        cvReady = true;
+                    } else {
+                        console.error("OpenCV.js no se pudo cargar.");
+                    }
+                }, 1000);
             }
         };
 
         // --- DB LOGIC ---
-        function initDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onerror = (event) => reject("Error al abrir IndexedDB.");
-                request.onsuccess = (event) => { db = event.target.result; resolve(); };
-                request.onupgradeneeded = (event) => {
-                    let db = event.target.result;
-                    let store;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-                    } else {
-                        store = event.target.transaction.objectStore(STORE_NAME);
-                    }
-                    if (!store.indexNames.contains('fecha')) store.createIndex('fecha', 'fecha', { unique: false });
-                    if (!store.indexNames.contains('tipo')) store.createIndex('tipo', 'tipo', { unique: false });
-                };
-            });
-        }
+        function initDB() { return new Promise((resolve, reject) => { const request = indexedDB.open(DB_NAME, DB_VERSION); request.onerror = (event) => reject("Error al abrir IndexedDB."); request.onsuccess = (event) => { db = event.target.result; resolve(); }; request.onupgradeneeded = (event) => { let db = event.target.result; let store; if (!db.objectStoreNames.contains(STORE_NAME)) { store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true }); } else { store = event.target.transaction.objectStore(STORE_NAME); } if (!store.indexNames.contains('fecha')) store.createIndex('fecha', 'fecha', { unique: false }); if (!store.indexNames.contains('tipo')) store.createIndex('tipo', 'tipo', { unique: false }); }; }); }
         
         // --- UI FLOW & NAMING LOGIC ---
-        function showTypeSelection() {
-            mainContent.style.display = 'none';
-            typeSelectionCard.style.display = 'block';
-            currentDocumentType = null;
-            clearSelectionBtn.click();
-            pdfNameInput.value = '';
-        }
+        function showTypeSelection() { mainContent.style.display = 'none'; typeSelectionCard.style.display = 'block'; currentDocumentType = null; clearSelectionBtn.click(); pdfNameInput.value = ''; }
+        function showMainContent(type) { currentDocumentType = type; typeSelectionCard.style.display = 'none'; mainContent.style.display = 'block'; charlaInputs.style.display = 'none'; formacionesInputs.style.display = 'none'; switch(type) { case 'RECONEXION': const hoy = new Date().toLocaleDateString('es-CO'); pdfNameInput.value = `RECONEXION A PAPEL PAMPLONA ${hoy}`; break; case 'CHARLA SEMANAL': charlaInputs.style.display = 'block'; updateCharlaName(); break; case 'FORMACIONES': formacionesInputs.style.display = 'block'; updateFormacionesName(); break; } }
+        function updateCharlaName() { const start = charlaStartDate.value, end = charlaEndDate.value; if (start && end) { const startDate = new Date(start + 'T00:00:00'), endDate = new Date(end + 'T00:00:00'); const startStr = startDate.toLocaleDateString('es-CO', { day: '2-digit', month: 'long' }); const endStr = endDate.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric'}); pdfNameInput.value = `CHARLA SEMANAL del ${startStr} al ${endStr}`; } else { pdfNameInput.value = 'CHARLA SEMANAL (selecciona fechas)'; } }
+        function updateFormacionesName() { const num = formacionNumero.value || 'XXX', txt = formacionTexto.value || 'descripción'; pdfNameInput.value = `PAM${num}-${txt}`; }
         
-        function showMainContent(type) {
-            currentDocumentType = type;
-            typeSelectionCard.style.display = 'none';
-            mainContent.style.display = 'block';
-            charlaInputs.style.display = 'none';
-            formacionesInputs.style.display = 'none';
-            switch(type) {
-                case 'RECONEXION':
-                    const hoy = new Date().toLocaleDateString('es-CO');
-                    pdfNameInput.value = `RECONEXION A PAPEL PAMPLONA ${hoy}`;
-                    break;
-                case 'CHARLA SEMANAL':
-                    charlaInputs.style.display = 'block';
-                    updateCharlaName();
-                    break;
-                case 'FORMACIONES':
-                    formacionesInputs.style.display = 'block';
-                    updateFormacionesName();
-                    break;
-            }
-        }
-
-        function updateCharlaName() {
-            const start = charlaStartDate.value, end = charlaEndDate.value;
-            if (start && end) {
-                const startDate = new Date(start + 'T00:00:00'), endDate = new Date(end + 'T00:00:00');
-                const startStr = startDate.toLocaleDateString('es-CO', { day: '2-digit', month: 'long' });
-                const endStr = endDate.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric'});
-                pdfNameInput.value = `CHARLA SEMANAL del ${startStr} al ${endStr}`;
-            } else {
-                pdfNameInput.value = 'CHARLA SEMANAL (selecciona fechas)';
-            }
-        }
-
-        function updateFormacionesName() {
-            const num = formacionNumero.value || 'XXX', txt = formacionTexto.value || 'descripción';
-            pdfNameInput.value = `PAM${num}-${txt}`;
-        }
-        
-        // --- SMART CAMERA LOGIC ---
-        function openCamera() {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert("Tu navegador no soporta el acceso a la cámara.");
-                return;
-            }
+        // --- SMART CAMERA LOGIC (ROBUST) ---
+        async function openCamera() {
+            if (!window.isSecureContext) { alert("¡Error de Seguridad! La cámara solo funciona en sitios HTTPS."); return; }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { alert("Tu navegador no soporta el acceso a la cámara."); return; }
+            
             cameraModal.classList.add('is-active');
             cameraMessage.textContent = 'Iniciando cámara...';
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-                .then(videoStream => {
-                    stream = videoStream;
-                    cameraVideo.srcObject = videoStream;
-                    cameraVideo.onloadedmetadata = () => {
-                        cameraOverlay.width = cameraVideo.videoWidth;
-                        cameraOverlay.height = cameraVideo.videoHeight;
-                        if(cvReady) processVideoInterval = setInterval(processVideoFrame, 100);
-                        else cameraMessage.textContent = "OpenCV no está listo. Detección desactivada.";
-                    };
-                })
-                .catch(err => {
-                    console.error("Error al acceder a la cámara:", err);
-                    alert("No se pudo acceder a la cámara. Revisa los permisos.");
-                    closeCamera();
-                });
+            detectionFailed = false;
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+                cameraVideo.srcObject = stream;
+                await cameraVideo.play();
+                cameraOverlay.width = cameraVideo.videoWidth;
+                cameraOverlay.height = cameraVideo.videoHeight;
+                if (cvReady) { cameraMessage.textContent = 'Apunte al documento...'; processVideoInterval = setInterval(processVideoFrame, 150); } 
+                else { cameraMessage.textContent = "Detección de bordes no disponible."; }
+            } catch (err) {
+                console.error("Error al acceder a la cámara:", err.name, err.message);
+                let userMessage = "No se pudo acceder a la cámara.\n";
+                if (err.name === 'NotAllowedError') userMessage += "Has denegado el permiso. Actívalo en los ajustes del navegador.";
+                else if (err.name === 'NotFoundError') userMessage += "No se encontró una cámara compatible.";
+                else userMessage += `Error: ${err.name}`;
+                alert(userMessage);
+                closeCamera();
+            }
         }
 
         function closeCamera() {
@@ -413,378 +256,128 @@
         }
 
         function processVideoFrame() {
+            if (detectionFailed || !cvReady || typeof cv === 'undefined' || !cv.Mat) {
+                if (processVideoInterval) clearInterval(processVideoInterval);
+                return;
+            }
             const overlayCtx = cameraOverlay.getContext('2d');
             overlayCtx.clearRect(0, 0, cameraOverlay.width, cameraOverlay.height);
+            let src, dst, contours, hierarchy;
             try {
-                const src = new cv.Mat(cameraVideo.videoHeight, cameraVideo.videoWidth, cv.CV_8UC4);
+                src = new cv.Mat(cameraVideo.videoHeight, cameraVideo.videoWidth, cv.CV_8UC4);
                 const cap = new cv.VideoCapture(cameraVideo);
                 cap.read(src);
-
-                const dst = new cv.Mat();
+                if (src.empty()) { src.delete(); return; }
+                dst = new cv.Mat(); contours = new cv.MatVector(); hierarchy = new cv.Mat();
                 cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
                 cv.GaussianBlur(dst, dst, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
                 cv.Canny(dst, dst, 50, 100);
-                
-                const contours = new cv.MatVector();
-                const hierarchy = new cv.Mat();
                 cv.findContours(dst, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-                let maxArea = 0, bestContour = null;
+                let maxArea = 0; let bestContour = null;
                 for (let i = 0; i < contours.size(); ++i) {
-                    const cnt = contours.get(i), area = cv.contourArea(cnt, false);
-                    if (area > maxArea) { maxArea = area; bestContour = cnt; }
+                    const cnt = contours.get(i); const area = cv.contourArea(cnt);
+                    if (area > maxArea) {
+                        if (bestContour) bestContour.delete();
+                        maxArea = area; bestContour = cnt.clone();
+                    }
+                    cnt.delete();
                 }
-
                 if (bestContour && maxArea > (cameraOverlay.width * cameraOverlay.height * 0.1)) {
-                     overlayCtx.strokeStyle = "rgba(0, 255, 0, 0.7)";
-                     overlayCtx.lineWidth = 4;
-                     overlayCtx.beginPath();
+                     overlayCtx.strokeStyle = "rgba(0, 255, 0, 0.7)"; overlayCtx.lineWidth = 4; overlayCtx.beginPath();
                      const points = bestContour.data32S;
                      overlayCtx.moveTo(points[0], points[1]);
                      for (let i = 2; i < points.length; i += 2) overlayCtx.lineTo(points[i], points[i + 1]);
-                     overlayCtx.closePath();
-                     overlayCtx.stroke();
-                     cameraMessage.textContent = "¡Documento detectado!";
-                } else {
-                    cameraMessage.textContent = "Apunte al documento...";
-                }
-                src.delete(); dst.delete(); contours.delete(); hierarchy.delete();
+                     overlayCtx.closePath(); overlayCtx.stroke(); cameraMessage.textContent = "¡Documento detectado!";
+                } else { cameraMessage.textContent = "Apunte al documento..."; }
+                if (bestContour) bestContour.delete();
             } catch (err) {
-                 if (processVideoInterval) clearInterval(processVideoInterval);
-                 console.error("Error en OpenCV:", err);
-                 cameraMessage.textContent = "Error de OpenCV. Detección detenida.";
+                console.error("Error en el ciclo de OpenCV:", err);
+                detectionFailed = true; cameraMessage.textContent = "Detección de bordes no disponible.";
+            } finally {
+                if (src) src.delete(); if (dst) dst.delete(); if (contours) contours.delete(); if (hierarchy) hierarchy.delete();
             }
         }
 
-        function captureImageFromVideo() {
-            closeCamera();
-            const canvas = document.createElement('canvas');
-            canvas.width = cameraVideo.videoWidth;
-            canvas.height = cameraVideo.videoHeight;
-            canvas.getContext('2d').drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
-            openImageEditor(canvas.toDataURL('image/jpeg', 0.9));
-        }
+        function captureImageFromVideo() { closeCamera(); const canvas = document.createElement('canvas'); canvas.width = cameraVideo.videoWidth; canvas.height = cameraVideo.videoHeight; canvas.getContext('2d').drawImage(cameraVideo, 0, 0, canvas.width, canvas.height); openImageEditor(canvas.toDataURL('image/jpeg', 0.9)); }
 
         // --- IMAGE EDITOR LOGIC ---
-        function openImageEditor(imageDataUrl) {
-            imageEditorModal.classList.add('is-active');
-            originalImageForEditing = new Image();
-            originalImageForEditing.onload = () => {
-                imageEditorCanvas.width = originalImageForEditing.width;
-                imageEditorCanvas.height = originalImageForEditing.height;
-                applyFilter('original');
-            };
-            originalImageForEditing.src = imageDataUrl;
-        }
-        
+        function openImageEditor(imageDataUrl) { imageEditorModal.classList.add('is-active'); originalImageForEditing = new Image(); originalImageForEditing.onload = () => { imageEditorCanvas.width = originalImageForEditing.width; imageEditorCanvas.height = originalImageForEditing.height; applyFilter('original'); }; originalImageForEditing.src = imageDataUrl; }
         function applyFilter(filterType) {
             document.querySelectorAll('.filter-buttons .btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`filter${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`).classList.add('active');
-
             const ctx = imageEditorCanvas.getContext('2d');
             ctx.drawImage(originalImageForEditing, 0, 0);
-
             if (filterType === 'original' || !cvReady) return;
-
             try {
-                let src = cv.imread(imageEditorCanvas);
-                let dst = new cv.Mat();
+                let src = cv.imread(imageEditorCanvas); let dst = new cv.Mat();
                 switch (filterType) {
-                    case 'enhance':
-                        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-                        let clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
-                        clahe.apply(dst, dst);
-                        cv.cvtColor(dst, src, cv.COLOR_GRAY2RGBA, 0);
-                        clahe.delete();
-                        break;
-                    case 'scanner':
-                        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0);
-                        cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 4);
-                        cv.cvtColor(dst, src, cv.COLOR_GRAY2RGBA, 0);
-                        break;
-                    case 'sharpen':
-                        let kernel = cv.matFromArray(3, 3, cv.CV_32F, [0, -1, 0, -1, 5, -1, 0, -1, 0]);
-                        cv.filter2D(src, dst, cv.CV_8U, kernel, new cv.Point(-1, -1), 0, cv.BORDER_DEFAULT);
-                        dst.copyTo(src);
-                        kernel.delete();
-                        break;
+                    case 'enhance': { let clahe = new cv.CLAHE(2.0, new cv.Size(8, 8)); cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0); clahe.apply(dst, dst); cv.cvtColor(dst, src, cv.COLOR_GRAY2RGBA, 0); clahe.delete(); break; }
+                    case 'scanner': { cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY, 0); cv.adaptiveThreshold(dst, dst, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 4); cv.cvtColor(dst, src, cv.COLOR_GRAY2RGBA, 0); break; }
+                    case 'sharpen': { let kernel = cv.matFromArray(3, 3, cv.CV_32F, [0, -1, 0, -1, 5, -1, 0, -1, 0]); cv.filter2D(src, dst, cv.CV_8U, kernel, new cv.Point(-1, -1), 0, cv.BORDER_DEFAULT); dst.copyTo(src); kernel.delete(); break; }
                 }
-                cv.imshow(imageEditorCanvas, src);
-                src.delete(); dst.delete();
-            } catch (err) {
-                console.error("Error al aplicar filtro con OpenCV: ", err);
-                alert("No se pudo aplicar el filtro. Es posible que OpenCV no haya cargado correctamente.");
-            }
+                cv.imshow(imageEditorCanvas, src); src.delete(); dst.delete();
+            } catch (err) { console.error("Error al aplicar filtro con OpenCV: ", err); alert("No se pudo aplicar el filtro. Es posible que OpenCV no haya cargado correctamente."); }
         }
 
-        function saveEditedImage() {
-            const finalImageDataUrl = imageEditorCanvas.toDataURL('image/jpeg', 0.9);
-            const file = dataURLtoFile(finalImageDataUrl, `img_${Date.now()}.jpg`);
-            selectedFiles.push(file);
-            updateSelectedFilesUI();
-            closeEditor();
-        }
-
-        function closeEditor() {
-            imageEditorModal.classList.remove('is-active');
-            originalImageForEditing = null;
-        }
+        function saveEditedImage() { const finalImageDataUrl = imageEditorCanvas.toDataURL('image/jpeg', 0.9); const file = dataURLtoFile(finalImageDataUrl, `img_${Date.now()}.jpg`); selectedFiles.push(file); updateSelectedFilesUI(); closeEditor(); }
+        function closeEditor() { imageEditorModal.classList.remove('is-active'); originalImageForEditing = null; }
 
         // --- FILE HANDLING & PDF GENERATION ---
         function handleFileSelection(event) {
             const newFiles = Array.from(event.target.files);
-            if (selectedFiles.length + newFiles.length > 10) {
-                alert("Puedes seleccionar un máximo de 10 archivos en total.");
-                return;
-            }
-            
+            if (selectedFiles.length + newFiles.length > 10) { alert("Puedes seleccionar un máximo de 10 archivos en total."); return; }
             const processQueue = [...newFiles];
             function processNextFile() {
-                if (processQueue.length === 0) {
-                    // Restaurar listeners por defecto cuando la cola termina
-                    editorSaveBtn.onclick = saveEditedImage;
-                    editorCancelBtn.onclick = closeEditor;
-                    return;
-                }
-                const file = processQueue.shift();
-                const reader = new FileReader();
-                reader.onload = (e) => openImageEditor(e.target.result);
-                reader.readAsDataURL(file);
+                if (processQueue.length === 0) { editorSaveBtn.onclick = saveEditedImage; editorCancelBtn.onclick = closeEditor; return; }
+                const file = processQueue.shift(); const reader = new FileReader(); reader.onload = (e) => openImageEditor(e.target.result); reader.readAsDataURL(file);
             }
-
-            // Sobreescribir temporalmente los listeners para manejar la cola
-            editorSaveBtn.onclick = () => { saveEditedImage(); processNextFile(); };
-            editorCancelBtn.onclick = () => { closeEditor(); processNextFile(); };
-
+            editorSaveBtn.onclick = () => { saveEditedImage(); processNextFile(); }; editorCancelBtn.onclick = () => { closeEditor(); processNextFile(); };
             processNextFile();
         }
 
-        function updateSelectedFilesUI() {
-            if (selectedFiles.length === 0) {
-                selectionInfo.style.display = 'none';
-                generateButton.disabled = true;
-            } else {
-                selectionInfo.style.display = 'block';
-                selectedFilesList.innerHTML = selectedFiles.map(f => `<li>${f.name} (Procesada)</li>`).join('');
-                generateButton.disabled = false;
-            }
-        }
+        function updateSelectedFilesUI() { if (selectedFiles.length === 0) { selectionInfo.style.display = 'none'; generateButton.disabled = true; } else { selectionInfo.style.display = 'block'; selectedFilesList.innerHTML = selectedFiles.map(f => `<li>${f.name} (Procesada)</li>`).join(''); generateButton.disabled = false; } }
         
         generateButton.addEventListener('click', async () => {
-            if (!pdfNameInput.value.trim() || pdfNameInput.value.includes('(selecciona') || pdfNameInput.value.includes('XXX')) {
-                alert("Por favor, completa los datos para el nombre del reporte.");
-                return;
-            }
-            generateButton.disabled = true;
-            generateButton.innerHTML = '<span class="loader"></span> Procesando...';
-            statusDiv.textContent = `Creando PDF...`;
+            if (!pdfNameInput.value.trim() || pdfNameInput.value.includes('(selecciona') || pdfNameInput.value.includes('XXX')) { alert("Por favor, completa los datos para el nombre del reporte."); return; }
+            generateButton.disabled = true; generateButton.innerHTML = '<span class="loader"></span> Procesando...'; statusDiv.textContent = `Creando PDF...`;
             try {
                 const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
                 for (let i = 0; i < selectedFiles.length; i++) {
                     statusDiv.textContent = `Agregando imagen ${i + 1} de ${selectedFiles.length}...`;
-                    const imageData = await readFileAsDataURL(selectedFiles[i]);
-                    const imgProps = await getImageProperties(imageData);
+                    const imageData = await readFileAsDataURL(selectedFiles[i]); const imgProps = await getImageProperties(imageData);
                     const { pdfWidth, pdfHeight } = { pdfWidth: pdf.internal.pageSize.getWidth(), pdfHeight: pdf.internal.pageSize.getHeight() };
                     const ratio = Math.min((pdfWidth - 20) / imgProps.width, (pdfHeight - 20) / imgProps.height);
-                    const [imgWidth, imgHeight] = [imgProps.width * ratio, imgProps.height * ratio];
-                    const [x, y] = [(pdfWidth - imgWidth) / 2, (pdfHeight - imgHeight) / 2];
+                    const [imgWidth, imgHeight] = [imgProps.width * ratio, imgProps.height * ratio]; const [x, y] = [(pdfWidth - imgWidth) / 2, (pdfHeight - imgHeight) / 2];
                     if (i > 0) pdf.addPage();
-                    pdf.addImage(imageData, null, x, y, imgWidth, imgHeight);
+                    pdf.addImage(imageData, 'JPEG', x, y, imgWidth, imgHeight);
                 }
-                generatedPdfName = pdfNameInput.value.trim();
-                generatedPdfBlob = pdf.output('blob');
-                await agregarAlHistorial(generatedPdfName, generatedPdfBlob, currentDocumentType);
-                await mostrarHistorial();
-                statusDiv.textContent = "¡PDF Listo!";
-                showShareOptionsModal();
-            } catch (error) {
-                console.error("Error al generar PDF:", error);
-                statusDiv.textContent = "Error al generar el PDF.";
-                alert("Ocurrió un error al procesar las imágenes.");
-            } finally {
-                generateButton.disabled = false;
-                generateButton.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generar PDF';
-            }
+                generatedPdfName = pdfNameInput.value.trim(); generatedPdfBlob = pdf.output('blob');
+                await agregarAlHistorial(generatedPdfName, generatedPdfBlob, currentDocumentType); await mostrarHistorial();
+                statusDiv.textContent = "¡PDF Listo!"; showShareOptionsModal();
+            } catch (error) { console.error("Error al generar PDF:", error); statusDiv.textContent = "Error al generar el PDF."; alert("Ocurrió un error al procesar las imágenes."); } 
+            finally { generateButton.disabled = false; generateButton.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Generar PDF'; }
         });
 
         // --- SHARING, HISTORY & HELPER FUNCTIONS ---
-        // (Esta sección no necesita cambios y se mantiene como en la versión original)
-        function showShareOptionsModal() {
-            modalNativeShare.style.display = nativeShareSupported ? 'flex' : 'none';
-            modalSeparator.style.display = nativeShareSupported ? 'block' : 'none';
-            modalEmail.style.display = (currentDocumentType === 'RECONEXION') ? 'flex' : 'none';
-            shareModal.classList.add('is-active'); 
-        }
-        async function triggerNativeShare(blob, name) {
-            const pdfFile = new File([blob], `${name}.pdf`, { type: 'application/pdf' });
-            if (!navigator.canShare || !navigator.canShare({ files: [pdfFile] })) {
-                alert("Tu navegador no puede compartir este tipo de archivo.");
-                return;
-            }
-            try { await navigator.share({ files: [pdfFile], title: name, text: `Se adjunta: ${name}` }); }
-            catch (error) { if (error.name !== 'AbortError') console.error('Error al compartir:', error); }
-        }
+        function showShareOptionsModal() { modalNativeShare.style.display = nativeShareSupported ? 'flex' : 'none'; modalSeparator.style.display = nativeShareSupported ? 'block' : 'none'; modalEmail.style.display = (currentDocumentType === 'RECONEXION') ? 'flex' : 'none'; shareModal.classList.add('is-active'); }
+        async function triggerNativeShare(blob, name) { const pdfFile = new File([blob], `${name}.pdf`, { type: 'application/pdf' }); if (!navigator.canShare || !navigator.canShare({ files: [pdfFile] })) { alert("Tu navegador no puede compartir este tipo de archivo."); return; } try { await navigator.share({ files: [pdfFile], title: name, text: `Se adjunta: ${name}` }); } catch (error) { if (error.name !== 'AbortError') console.error('Error al compartir:', error); } }
         function closeModal() { shareModal.classList.remove('is-active'); }
-        async function agregarAlHistorial(nombre, pdfBlob, tipo) {
-            const transaction = db.transaction([STORE_NAME], 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            return new Promise((resolve, reject) => {
-                const request = store.add({ nombre, fecha: new Date(), pdfBlob, tipo });
-                request.onsuccess = resolve; request.onerror = reject;
-            });
-        }
-        async function mostrarHistorial() {
-            await limpiarHistorialAntiguo();
-            const transaction = db.transaction([STORE_NAME], 'readonly');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.getAll();
-            request.onerror = () => { historyContainer.innerHTML = "<p>Error al cargar el historial.</p>"; };
-            request.onsuccess = (event) => {
-                const historial = event.target.result;
-                if (historial.length === 0) { historyContainer.innerHTML = "<p>No hay envíos guardados.</p>"; return; }
-                const grouped = historial.reduce((acc, item) => {
-                    const tipo = item.tipo || 'Sin Categoría', fecha = new Date(item.fecha);
-                    const monthKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-                    const dayKey = `${monthKey}-${String(fecha.getDate()).padStart(2, '0')}`;
-                    if (!acc[tipo]) acc[tipo] = {};
-                    if (!acc[tipo][monthKey]) acc[tipo][monthKey] = {};
-                    if (!acc[tipo][monthKey][dayKey]) acc[tipo][monthKey][dayKey] = [];
-                    acc[tipo][monthKey][dayKey].push(item);
-                    return acc;
-                }, {});
-                let html = '<div class="history-group">';
-                for (const tipo in grouped) {
-                    const tipoNombres = { 'RECONEXION': 'Reconexiones', 'CHARLA SEMANAL': 'Charlas Semanales', 'FORMACIONES': 'Formaciones' };
-                    const tipoNombre = tipoNombres[tipo] || tipo;
-                    const totalItemsPorTipo = Object.values(grouped[tipo]).flatMap(days => Object.values(days)).flat().length;
-                    html += `<details><summary>${tipoNombre} (${totalItemsPorTipo})</summary><div class="history-group-nested">`;
-                    const meses = grouped[tipo], sortedMonthKeys = Object.keys(meses).sort().reverse();
-                    for(const monthKey of sortedMonthKeys) {
-                        const totalItemsPorMes = Object.values(meses[monthKey]).flat().length;
-                        const [year, month] = monthKey.split('-'), monthName = new Date(year, month - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-                        html += `<details><summary class="month-summary">${monthName.charAt(0).toUpperCase() + monthName.slice(1)} (${totalItemsPorMes})</summary><div class="history-group-nested">`;
-                        const dias = meses[monthKey], sortedDayKeys = Object.keys(dias).sort().reverse();
-                        for(const dayKey of sortedDayKeys) {
-                            const itemsDelDia = dias[dayKey];
-                            const [dYear, dMonth, dDay] = dayKey.split('-'), dayName = new Date(dYear, dMonth-1, dDay).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' });
-                            html += `<details><summary class="day-summary">${dayName.charAt(0).toUpperCase() + dayName.slice(1)} (${itemsDelDia.length})</summary><div class="history-item-container">`;
-                            html += itemsDelDia.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).map(item => `
-                                <div class="history-item">
-                                    <div class="history-info"><span class="name">${item.nombre}</span><span class="date">${new Date(item.fecha).toLocaleString('es-ES')}</span></div>
-                                    <div class="history-actions">
-                                        ${nativeShareSupported ? `<button class="btn history-share-btn" data-id="${item.id}"><i class="fa-solid fa-share-nodes"></i></button>` : ''}
-                                        <button class="btn history-dl-btn" data-id="${item.id}"><i class="fa-solid fa-download"></i></button>
-                                    </div>
-                                </div>`).join('');
-                            html += `</div></details>`;
-                        }
-                        html += `</div></details>`;
-                    }
-                    html += `</div></details>`;
-                }
-                historyContainer.innerHTML = html + '</div>';
-            };
-        }
-        function descargarDesdeHistorial(id) {
-            const store = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME);
-            store.get(id).onsuccess = (event) => {
-                const record = event.target.result;
-                if (record && record.pdfBlob) downloadBlob(record.pdfBlob, `${record.nombre}.pdf`);
-            };
-        }
-        async function shareFromHistory(id) {
-            const store = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME);
-            store.get(id).onsuccess = (event) => {
-                const record = event.target.result;
-                if (record && record.pdfBlob) triggerNativeShare(record.pdfBlob, record.nombre);
-            };
-        }
-        function downloadBlob(blob, filename) {
-             const url = URL.createObjectURL(blob);
-             const a = document.createElement('a');
-             a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-        }
-        function limpiarHistorialAntiguo() {
-            return new Promise((resolve, reject) => {
-                const tresMesesAtras = new Date();
-                tresMesesAtras.setMonth(tresMesesAtras.getMonth() - 3);
-                const index = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).index('fecha');
-                const request = index.openCursor(IDBKeyRange.upperBound(tresMesesAtras));
-                request.onsuccess = event => { const cursor = event.target.result; if (cursor) { cursor.delete(); cursor.continue(); } else { resolve(); } };
-                request.onerror = reject;
-            });
-        }
+        async function agregarAlHistorial(nombre, pdfBlob, tipo) { const transaction = db.transaction([STORE_NAME], 'readwrite'); const store = transaction.objectStore(STORE_NAME); return new Promise((resolve, reject) => { const request = store.add({ nombre, fecha: new Date(), pdfBlob, tipo }); request.onsuccess = resolve; request.onerror = reject; }); }
+        async function mostrarHistorial() { if(!db) return; await limpiarHistorialAntiguo(); const transaction = db.transaction([STORE_NAME], 'readonly'); const store = transaction.objectStore(STORE_NAME); const request = store.getAll(); request.onerror = () => { historyContainer.innerHTML = "<p>Error al cargar el historial.</p>"; }; request.onsuccess = (event) => { const historial = event.target.result; if (historial.length === 0) { historyContainer.innerHTML = "<p>No hay envíos guardados.</p>"; return; } const grouped = historial.reduce((acc, item) => { const tipo = item.tipo || 'Sin Categoría', fecha = new Date(item.fecha); const monthKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`; const dayKey = `${monthKey}-${String(fecha.getDate()).padStart(2, '0')}`; if (!acc[tipo]) acc[tipo] = {}; if (!acc[tipo][monthKey]) acc[tipo][monthKey] = {}; if (!acc[tipo][monthKey][dayKey]) acc[tipo][monthKey][dayKey] = []; acc[tipo][monthKey][dayKey].push(item); return acc; }, {}); let html = '<div class="history-group">'; for (const tipo in grouped) { const tipoNombres = { 'RECONEXION': 'Reconexiones', 'CHARLA SEMANAL': 'Charlas Semanales', 'FORMACIONES': 'Formaciones' }; const tipoNombre = tipoNombres[tipo] || tipo; const totalItemsPorTipo = Object.values(grouped[tipo]).flatMap(days => Object.values(days)).flat().length; html += `<details><summary>${tipoNombre} (${totalItemsPorTipo})</summary><div class="history-group-nested">`; const meses = grouped[tipo], sortedMonthKeys = Object.keys(meses).sort().reverse(); for(const monthKey of sortedMonthKeys) { const totalItemsPorMes = Object.values(meses[monthKey]).flat().length; const [year, month] = monthKey.split('-'), monthName = new Date(year, month - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }); html += `<details><summary class="month-summary">${monthName.charAt(0).toUpperCase() + monthName.slice(1)} (${totalItemsPorMes})</summary><div class="history-group-nested">`; const dias = meses[monthKey], sortedDayKeys = Object.keys(dias).sort().reverse(); for(const dayKey of sortedDayKeys) { const itemsDelDia = dias[dayKey].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)); const [dYear, dMonth, dDay] = dayKey.split('-'), dayName = new Date(dYear, dMonth-1, dDay).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric' }); html += `<details><summary class="day-summary">${dayName.charAt(0).toUpperCase() + dayName.slice(1)} (${itemsDelDia.length})</summary><div class="history-item-container">`; html += itemsDelDia.map(item => `<div class="history-item"><div class="history-info"><span class="name">${item.nombre}</span><span class="date">${new Date(item.fecha).toLocaleString('es-ES')}</span></div><div class="history-actions">${nativeShareSupported ? `<button class="btn history-share-btn" data-id="${item.id}"><i class="fa-solid fa-share-nodes"></i></button>` : ''}<button class="btn history-dl-btn" data-id="${item.id}"><i class="fa-solid fa-download"></i></button></div></div>`).join(''); html += `</div></details>`; } html += `</div></details>`; } html += `</div></details>`; } historyContainer.innerHTML = html + '</div>'; }; }
+        function descargarDesdeHistorial(id) { const store = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME); store.get(id).onsuccess = (event) => { const record = event.target.result; if (record && record.pdfBlob) downloadBlob(record.pdfBlob, `${record.nombre}.pdf`); }; }
+        async function shareFromHistory(id) { const store = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME); store.get(id).onsuccess = (event) => { const record = event.target.result; if (record && record.pdfBlob) triggerNativeShare(record.pdfBlob, record.nombre); }; }
+        function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+        function limpiarHistorialAntiguo() { return new Promise((resolve, reject) => { if (!db) return resolve(); const tresMesesAtras = new Date(); tresMesesAtras.setMonth(tresMesesAtras.getMonth() - 3); const index = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).index('fecha'); const request = index.openCursor(IDBKeyRange.upperBound(tresMesesAtras)); request.onsuccess = event => { const cursor = event.target.result; if (cursor) { cursor.delete(); cursor.continue(); } else { resolve(); } }; request.onerror = reject; }); }
         const readFileAsDataURL = file => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
         const getImageProperties = src => new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve({ width: img.width, height: img.height }); img.onerror = reject; img.src = src; });
-        function dataURLtoFile(dataurl, filename) {
-            let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-            while(n--) u8arr[n] = bstr.charCodeAt(n);
-            return new File([u8arr], filename, {type:mime});
-        }
+        function dataURLtoFile(dataurl, filename) { let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n); while(n--) u8arr[n] = bstr.charCodeAt(n); return new File([u8arr], filename, {type:mime}); }
 
         // --- GLOBAL EVENT LISTENERS & INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            nativeShareSupported = !!(navigator.share && navigator.canShare);
-            onOpenCvReady(); // Llama a la inicialización de OpenCV
-            try {
-                await initDB();
-                await mostrarHistorial();
-            } catch (error) {
-                console.error(error);
-                historyContainer.innerHTML = `<p style="color:red;">Error fatal al cargar la base de datos.</p>`;
-            }
-            showTypeSelection();
-            updateSelectedFilesUI();
-        });
-        
-        typeButtons.forEach(btn => btn.addEventListener('click', () => showMainContent(btn.dataset.type))); 
-        changeTypeBtn.addEventListener('click', showTypeSelection); 
-        charlaStartDate.addEventListener('change', updateCharlaName); 
-        charlaEndDate.addEventListener('change', updateCharlaName); 
-        formacionNumero.addEventListener('input', updateFormacionesName); 
-        formacionTexto.addEventListener('input', updateFormacionesName);
-        captureBtn.addEventListener('click', openCamera);
-        selectBtn.addEventListener('click', () => selectInput.click()); 
-        captureInput.addEventListener('change', handleFileSelection); 
-        selectInput.addEventListener('change', handleFileSelection);
-        clearSelectionBtn.addEventListener('click', () => { 
-            selectedFiles = []; 
-            captureInput.value = ''; selectInput.value = ''; 
-            updateSelectedFilesUI(); 
-        });
-
-        // Camera & Editor listeners
-        cameraCloseBtn.addEventListener('click', closeCamera);
-        cameraCaptureBtn.addEventListener('click', captureImageFromVideo);
-        editorSaveBtn.addEventListener('click', saveEditedImage); // Default behavior
-        editorCancelBtn.addEventListener('click', closeEditor); // Default behavior
-        filterButtonsContainer.addEventListener('click', (e) => {
-            const button = e.target.closest('.btn');
-            if (button && button.id) applyFilter(button.id.replace('filter', '').toLowerCase());
-        });
-        
-        // Share Modal listeners
-        modalNativeShare.addEventListener('click', () => triggerNativeShare(generatedPdfBlob, generatedPdfName).finally(closeModal));
-        modalClose.addEventListener('click', closeModal);
-        modalDownload.addEventListener('click', () => { downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`); closeModal(); });
-        modalWhatsapp.addEventListener('click', () => {
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Se comparte: ${generatedPdfName}`)}`, '_blank');
-            setTimeout(() => downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`), 500); closeModal();
-        });
-        modalEmail.addEventListener('click', () => {
-            const cc = "diego.medina@inmel.co,edgar.mendoza@inmel.co,NELSON.CARVAJAL@cens.com.co";
-            const asunto = encodeURIComponent("RECONEXIONES A PAPEL"), firma = `\n\n\nCordialmente.\n\nSupervisión Pamplona\nProyecto CENS Comercial\nsupervisionpamplona.cens@consorcioci.co`, cuerpo = encodeURIComponent(`Buen día.\n\nAdjunto archivo de reconexiones ejecutadas.\n\nQuedo atento.${firma}`);
-            window.open(`mailto:${CORREO_DESTINO}?cc=${cc}&subject=${asunto}&body=${cuerpo}`, '_blank');
-            setTimeout(() => downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`), 500); closeModal();
-        });
-        
-        // History listeners
-        historyContainer.addEventListener('click', (event) => {
-            const dlBtn = event.target.closest('.history-dl-btn');
-            if (dlBtn) descargarDesdeHistorial(Number(dlBtn.dataset.id));
-            const shareBtn = event.target.closest('.history-share-btn');
-            if (shareBtn) shareFromHistory(Number(shareBtn.dataset.id));
-        });
+        document.addEventListener('DOMContentLoaded', async () => { nativeShareSupported = !!(navigator.share && navigator.canShare); try { await initDB(); await mostrarHistorial(); } catch (error) { console.error(error); historyContainer.innerHTML = `<p style="color:red;">Error fatal al cargar la base de datos.</p>`; } showTypeSelection(); updateSelectedFilesUI(); });
+        typeButtons.forEach(btn => btn.addEventListener('click', () => showMainContent(btn.dataset.type))); changeTypeBtn.addEventListener('click', showTypeSelection); charlaStartDate.addEventListener('change', updateCharlaName); charlaEndDate.addEventListener('change', updateCharlaName); formacionNumero.addEventListener('input', updateFormacionesName); formacionTexto.addEventListener('input', updateFormacionesName); captureBtn.addEventListener('click', openCamera); selectBtn.addEventListener('click', () => selectInput.click()); captureInput.addEventListener('change', handleFileSelection); selectInput.addEventListener('change', handleFileSelection); clearSelectionBtn.addEventListener('click', () => { selectedFiles = []; captureInput.value = ''; selectInput.value = ''; updateSelectedFilesUI(); });
+        cameraCloseBtn.addEventListener('click', closeCamera); cameraCaptureBtn.addEventListener('click', captureImageFromVideo); editorSaveBtn.addEventListener('click', saveEditedImage); editorCancelBtn.addEventListener('click', closeEditor); filterButtonsContainer.addEventListener('click', (e) => { const button = e.target.closest('.btn'); if (button && button.id) applyFilter(button.id.replace('filter', '').toLowerCase()); });
+        modalNativeShare.addEventListener('click', () => triggerNativeShare(generatedPdfBlob, generatedPdfName).finally(closeModal)); modalClose.addEventListener('click', closeModal); modalDownload.addEventListener('click', () => { downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`); closeModal(); }); modalWhatsapp.addEventListener('click', () => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`Se comparte: ${generatedPdfName}`)}`, '_blank'); setTimeout(() => downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`), 500); closeModal(); }); modalEmail.addEventListener('click', () => { const cc = "diego.medina@inmel.co,edgar.mendoza@inmel.co,NELSON.CARVAJAL@cens.com.co"; const asunto = encodeURIComponent("RECONEXIONES A PAPEL"), firma = `\n\n\nCordialmente.\n\nSupervisión Pamplona\nProyecto CENS Comercial\nsupervisionpamplona.cens@consorcioci.co`, cuerpo = encodeURIComponent(`Buen día.\n\nAdjunto archivo de reconexiones ejecutadas.\n\nQuedo atento.${firma}`); window.open(`mailto:${CORREO_DESTINO}?cc=${cc}&subject=${asunto}&body=${cuerpo}`, '_blank'); setTimeout(() => downloadBlob(generatedPdfBlob, `${generatedPdfName}.pdf`), 500); closeModal(); });
+        historyContainer.addEventListener('click', (event) => { const dlBtn = event.target.closest('.history-dl-btn'); if (dlBtn) descargarDesdeHistorial(Number(dlBtn.dataset.id)); const shareBtn = event.target.closest('.history-share-btn'); if (shareBtn) shareFromHistory(Number(shareBtn.dataset.id)); });
 
     </script>
 </body>
