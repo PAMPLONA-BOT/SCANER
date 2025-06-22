@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Gestor de Reportes Pro</title>
+
+    <!-- PWA y Metadatos para Móviles -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <!-- Librerías Externas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -33,7 +41,6 @@
             background-color: var(--bg-color);
             color: var(--dark-color);
         }
-        
         .app-header {
             background: white;
             color: var(--dark-color);
@@ -61,9 +68,7 @@
             transition: background 0.2s;
         }
         #changeTypeBtn:hover { background-color: #e2e6ea; }
-
         .app-container { max-width: 700px; margin: 0 auto; padding: 20px; }
-        
         #typeSelectionCard { padding: 30px; }
         .type-selection-grid {
             display: grid;
@@ -91,8 +96,6 @@
         }
         .type-tile h3 { margin: 0 0 5px 0; font-size: 1.2em; }
         .type-tile p { margin: 0; color: #6c757d; font-size: 0.9em; }
-
-
         .card {
             background-color: white;
             border-radius: 16px;
@@ -121,7 +124,6 @@
         .btn-primary { background-color: var(--primary-color); color: white; }
         .btn-secondary { background-color: var(--secondary-color); color: white; }
         .btn-danger { background-color: var(--danger-color); color: white; }
-        
         #filePreviewContainer { display: none; margin-top: 25px; }
         .file-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 15px; }
         .preview-item { position: relative; border-radius: 12px; overflow: hidden; border: 2px solid var(--border-color); height: 110px; }
@@ -136,19 +138,15 @@
         .input-group label { font-weight: 600; display: block; margin-bottom: 8px; color: #495057; }
         .input-group input { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 1em; }
         .input-group-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        
-        /* --- ESTILOS DE HISTORIAL --- */
         .history-group details { border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 10px; background-color: #fff; transition: box-shadow 0.2s; }
         .history-group details[open] { box-shadow: 0 4px 15px var(--shadow-color); }
         .history-group summary { font-weight: 600; font-size: 1.1em; padding: 18px; cursor: pointer; list-style: none; display: flex; align-items: center; }
         .history-group summary::-webkit-details-marker { display: none; }
         .history-group summary:before { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; margin-right: 15px; transition: transform 0.2s; color: var(--primary-color); }
         .history-group details[open] > summary:before { transform: rotate(180deg); }
-
         .history-group-nested { padding: 0 15px 10px 15px; }
         .history-group-nested details { border-color: #e9ecef; background-color: #f8f9fa; }
         .history-group-nested summary { font-size: 1em; padding: 12px 15px; }
-        
         .history-item-container { padding: 0 15px 15px; }
         .history-item { display: flex; justify-content: space-between; align-items: center; background: #fff; border-bottom: 1px solid #eee; padding: 15px 5px; }
         .history-item:last-child { border-bottom: none; }
@@ -156,14 +154,12 @@
         .history-info .date { font-size: 0.85em; color: #666; margin-top: 4px; }
         .history-actions { display: flex; gap: 10px; }
         .history-actions .btn { padding: 8px 12px; font-size: 0.9em; border-radius: 8px; width: auto; }
-
         #toastContainer { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 10px; align-items: center; }
         .toast { padding: 12px 20px; border-radius: 25px; color: white; font-weight: 500; box-shadow: 0 3px 10px rgba(0,0,0,0.2); opacity: 0; transform: translateY(20px); transition: all 0.4s ease; }
         .toast.is-visible { opacity: 1; transform: translateY(0); }
         .toast-info { background-color: var(--dark-color); }
         .toast-success { background-color: var(--secondary-color); }
         .toast-error { background-color: var(--danger-color); }
-        
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; z-index: 1000; }
         .modal-container { background: white; padding: 25px; border-radius: 16px; width: 95%; max-width: 500px; transform: scale(0.95); transition: transform 0.3s ease; }
         .modal-overlay.is-active { opacity: 1; visibility: visible; }
@@ -177,24 +173,6 @@
         .loader { display: inline-block; border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; width: 20px; height: 20px; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Gestor de Reportes Pro</title>
-
-    <!-- AGREGAR ESTA LÍNEA PARA EL MANIFEST -->
-    <link rel="manifest" href="manifest.json">
-    <!-- Opcional: para iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0d6efd">
-
-    <!-- Librerías Externas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    ...
-</head>
-
-
 </head>
 <body>
     
@@ -519,8 +497,6 @@
             };
         }
         
-        // --- CÓDIGO RESTANTE (RECORTADOR, PDF, ETC) ---
-        // Estas funciones son independientes y no tienen cambios
         function handleFileSelectionForCropper(e) { const f = e.target.files; if (f && f.length > 0) { if (selectedFiles.length >= 10) { showToast("Máximo 10 imágenes permitidas.", 'error'); return; } openCropper(f[0]); } }
         function openCropper(file) { const reader = new FileReader(); reader.onload = (e) => { dom.cropperImage.src = e.target.result; dom.cropperModal.classList.add('is-active'); cropperInstance = new Cropper(dom.cropperImage, { aspectRatio: 0, viewMode: 1, responsive: true, background: false, autoCropArea: 0.9 }); }; reader.readAsDataURL(file); }
         function confirmCrop() { if (!cropperInstance) return; cropperInstance.getCroppedCanvas({ width: 1200, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' }).toBlob(blob => { const newFile = new File([blob], `cropped-${Date.now()}.jpg`, { type: 'image/jpeg' }); selectedFiles.push(newFile); updateSelectedFilesUI(); closeCropper(); }, 'image/jpeg', 0.9); }
@@ -542,13 +518,8 @@
         const readFileAsDataURL = file => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
         const getImageProperties = src => new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve({ width: img.width, height: img.height }); img.onerror = reject; img.src = src; });
     </script>
-    ...
-    <script>
-        // ... todo tu script actual ...
-        const getImageProperties = src => new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve({ width: img.width, height: img.height }); img.onerror = reject; img.src = src; });
-    </script>
 
-    <!-- AGREGAR ESTE SCRIPT PARA REGISTRAR EL SERVICE WORKER -->
+    <!-- SCRIPT PARA REGISTRAR EL SERVICE WORKER -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
